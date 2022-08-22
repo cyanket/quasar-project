@@ -1,6 +1,6 @@
 # Quasar App (quasar-project)
 
-Softinfo Systems demo
+Quasar demo app with q-table, cards and dark mode
 
 ## Install the dependencies
 ```bash
