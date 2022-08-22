@@ -1,18 +1,18 @@
 <template>
   <div>
-    <q-tabs v-model="tab" dense class="text-grey bg-purple shadow-2" active-color="primary"
-      indicator-color="cyan" align="justify" narrow-indicator v-if="!searchActive">
+    <q-tabs v-model="tab" dense class="text-grey bg-red-5 shadow-2" active-color="primary"
+      indicator-color="cyan" align="justify" narrow-indicator>
       <q-tab name="table" label="Data Entries" class="text-white"/>
       <q-tab name="cards" label="Cards" class="text-white"/>
       <q-tab name="settings" label="Settings" class="text-white"/>
-      <q-btn class="q-mr-md" icon="search" round unelevated @click="toggleSearch"/>
-    </q-tabs>
-    <q-tabs v-if="searchActive">
-      <local-search-input v-if="searchActive" @input="updateSearch" @click="toggleSearch"
-        class="app-panel-header__search" />
     </q-tabs>
 
     <q-separator />
+
+    <div class="text-center">
+      <input @focus="changeTab" v-on:input="searchItem" type="text"
+      placeholder="Search for the restaurant" class="app-panel-header__search q-pa-sm q-mt-md"/>
+    </div>
 
     <q-tab-panels v-model="tab" class="darkPage" animated>
       <q-tab-panel name="table">
@@ -51,6 +51,7 @@
         </q-card>
         </div>
         </div>
+        <div v-if="cardData.length == 0" class="text-center"><h4>No results found</h4></div>
       </q-tab-panel>
 
       <q-tab-panel name="settings">
@@ -73,10 +74,8 @@
 <script>
 import { ref } from 'vue';
 import axios from 'axios';
-import LocalSearchInput from 'src/components/LocalSearchInput.vue';
 
 export default {
-  components: { LocalSearchInput },
   el: '#app',
   data() {
     const cardData = [
@@ -99,8 +98,26 @@ export default {
         id: 5, name: 'Mustard Restro Lounge', label: 'Continental, Italian', title: 'Continental, Italian, & Chinese in global retaurant chain.', img: 'https://cdn.pixabay.com/photo/2017/01/26/02/06/platter-2009590_1280.jpg', distance: '2.1 km',
       },
     ];
-    const loading = ref(true);
-    const entries = ref([]);
+    const cardDataImmutable = [
+      {
+        id: 0, name: 'Cafe Barista', label: 'Italian Cafe', title: 'Small plates., salads & sandwiches in an intimate setting .', img: 'https://cdn.quasar.dev/img/chicken-salad.jpg', distance: '250 ft',
+      },
+      {
+        id: 1, name: 'Yum Foods', label: 'Indian Restaurant', title: 'North Indian, Chaat, Shakes, Appetizers & nice ambience.', img: 'https://cdn.pixabay.com/photo/2014/04/05/11/27/buffet-315691_1280.jpg', distance: '1 km',
+      },
+      {
+        id: 2, name: 'Momo Kings', label: 'Nepalese Cuisine', title: 'Small plates, Momos & Chinese in global retaurant chain.', img: 'https://cdn.pixabay.com/photo/2020/09/21/12/40/meal-5589923_1280.jpg', distance: '1.6 km',
+      },
+      {
+        id: 3, name: 'Haldiram Planet Food', label: 'Indian Food', title: 'Small plates., salads & sandwiches in an intimate setting .', img: 'https://cdn.pixabay.com/photo/2014/12/22/12/22/food-577224_1280.jpg', distance: '3.6 km',
+      },
+      {
+        id: 4, name: 'Burger Singh', label: 'Continental, Fast-food', title: 'Fast food, Continental., Shakes., Appetizers & nice decor.', img: 'https://cdn.pixabay.com/photo/2016/05/25/10/43/hamburger-1414422_1280.jpg', distance: '1.9 km',
+      },
+      {
+        id: 5, name: 'Mustard Restro Lounge', label: 'Continental, Italian', title: 'Continental, Italian, & Chinese in global retaurant chain.', img: 'https://cdn.pixabay.com/photo/2017/01/26/02/06/platter-2009590_1280.jpg', distance: '2.1 km',
+      },
+    ];
     const columns = [
       {
         name: 'api', label: 'API', field: 'API', align: 'left',
@@ -115,6 +132,8 @@ export default {
         name: 'category', label: 'Category', field: 'Category', align: 'left',
       },
     ];
+    const loading = ref(true);
+    const entries = ref([]);
     const pagination = ref({
       sortBy: 'name',
       descending: false,
@@ -122,7 +141,7 @@ export default {
       rowsPerPage: 0,
     });
 
-    // Fetch dogs
+    // Fetch data
     axios.get('https://api.publicapis.org/entries')
       .then((response) => {
         entries.value = response.data.entries;
@@ -134,25 +153,33 @@ export default {
       tab: ref('table'),
       columns,
       cardData,
+      cardDataImmutable,
       loading,
       entries,
       pagination,
       darkMode: false,
       stars: ref(4),
-      searchActive: false,
       searchText: '',
     };
   },
   methods: {
+    searchItem(event) {
+      if (event.target.value) {
+        // eslint-disable-next-line max-len
+        const temp = this.cardData.filter((card) => card.name.toUpperCase().includes(event.target.value.toUpperCase()));
+        if (temp) {
+          this.cardData = temp;
+        }
+      } else {
+        this.cardData = this.cardDataImmutable;
+      }
+    },
+    changeTab() {
+      this.tab = 'cards';
+    },
     deleteItem(id) {
       const newArray = this.cardData.filter((card) => card.id !== id);
       this.cardData = [...newArray];
-    },
-    toggleSearch() {
-      this.searchActive = !this.searchActive;
-      if (this.searchActive === false) {
-        this.searchText = '';
-      }
     },
     updateSearch(value) {
       this.searchText = value;
@@ -181,9 +208,6 @@ export default {
   computed: {
     darkDark() {
       return this.darkMode && 'darkmode-toggled';
-    },
-    cardData1() {
-      return this.cardData;
     },
   },
 };
@@ -294,7 +318,7 @@ body.dark-mode {
   height: 100%;
 }
 .my-sticky-column-table {
-  height: 88vh;
+  height: 78vh;
 
   td:first-child {
     /* bg color is important for td; just specify one */
@@ -358,6 +382,15 @@ body.dark-mode {
 }
 .dark-mode td:first-child {
   background: #636466 !important;
+  color: $light;
+}
+.app-panel-header__search {
+  width: 95%;
+  border-radius: 12px;
+  border-style: solid;
+}
+.dark-mode .app-panel-header__search {
+  background: $dark-cardbg;
   color: $light;
 }
 </style>
